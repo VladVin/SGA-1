@@ -3,6 +3,7 @@ package tokenizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+//tokenizer
 public class Tokenizer {
     public static HashMap<String, Float> tokenize (String doc){
 
