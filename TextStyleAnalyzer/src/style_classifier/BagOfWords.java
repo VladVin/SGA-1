@@ -8,6 +8,10 @@ import java.util.*;
 public class BagOfWords {
 
     private static final int MAX_VOCABULARY_SIZE = 5000;
+    private static final TfWeight TF_WEIGHT = TfWeight.RAW_FREQUENCY;
+
+    private enum TfWeight {
+        BINARY_FREQUENCY, RAW_FREQUENCY, LOG_NORMALIZATION }
 
     private ArrayList<String> vocabulary;
 
@@ -51,16 +55,6 @@ public class BagOfWords {
         }
 
         return docTf;
-
-//        String docDescriptor = "";
-//        for (int i = 0; i < docTf.size() - 1; i++) {
-//            docDescriptor += docTf.get(i) + ", ";
-//        }
-//        if (docTf.size() != 0) {
-//            docDescriptor += docTf.get(docTf.size() - 1);
-//        }
-//
-//        return docDescriptor;
     }
 
     private void extractVocabulary(ArrayList<DocSamplePackage> samples) {
@@ -101,8 +95,21 @@ public class BagOfWords {
     }
 
     private float calcTf(float rawTermFrequency) {
-        // The simplest way of calculating term frequency
-        return rawTermFrequency;
+        // Choose the way of calculating term frequency weight
+        switch (TF_WEIGHT) {
+            case BINARY_FREQUENCY:
+                if (rawTermFrequency > 0.0f) {
+                    return 1.0f;
+                } else {
+                    return 0.0f;
+                }
+            case RAW_FREQUENCY:
+                return rawTermFrequency;
+            case LOG_NORMALIZATION:
+                return 1.0f + (float)Math.log(rawTermFrequency);
+            default:
+                return rawTermFrequency;
+        }
     }
 
     private HashMap<String, Float> sortHashMapByValues(
