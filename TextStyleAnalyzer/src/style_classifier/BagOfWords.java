@@ -11,25 +11,27 @@ public class BagOfWords {
 
     private ArrayList<String> vocabulary;
 
-    public String parseTrainHistorgrams(ArrayList<HashMap<String, Float>> histograms) {
-        if (histograms == null || histograms.size() == 0) {
+    public ArrayList<ArrayList<Float>> parseTrainHistograms(
+            ArrayList<DocSamplePackage> trainSamples) {
+        if (trainSamples == null || trainSamples.size() == 0) {
             return null;
         }
 
-        extractVocabulary(histograms);
+        extractVocabulary(trainSamples);
 
-        ArrayList<String> docDescriptors = new ArrayList<>();
-        for (HashMap<String, Float> histogram : histograms) {
-            String docDescriptor = calcDocDescriptor(histogram);
+        ArrayList<ArrayList<Float>> docDescriptors = new ArrayList<>();
+        for (DocSamplePackage sample : trainSamples) {
+            HashMap<String, Float> histogram = sample.getHistogram();
+            ArrayList<Float> docDescriptor = calcDocDescriptor(histogram);
             docDescriptors.add(docDescriptor);
         }
 
-        return mergeDocDescriptors(docDescriptors);
+        return docDescriptors;
     }
 
-    public String calcDocDescriptor(HashMap<String, Float> histogram) {
+    public ArrayList<Float> calcDocDescriptor(HashMap<String, Float> histogram) {
         if (vocabulary == null) {
-            return "";
+            return null;
         }
 
         float countOfTerms = 0.0f;
@@ -48,21 +50,24 @@ public class BagOfWords {
             }
         }
 
-        String docDescriptor = "";
-        for (int i = 0; i < docTf.size() - 1; i++) {
-            docDescriptor += docTf.get(i) + ", ";
-        }
-        if (docTf.size() != 0) {
-            docDescriptor += docTf.get(docTf.size() - 1);
-        }
+        return docTf;
 
-        return docDescriptor;
+//        String docDescriptor = "";
+//        for (int i = 0; i < docTf.size() - 1; i++) {
+//            docDescriptor += docTf.get(i) + ", ";
+//        }
+//        if (docTf.size() != 0) {
+//            docDescriptor += docTf.get(docTf.size() - 1);
+//        }
+//
+//        return docDescriptor;
     }
 
-    private void extractVocabulary(ArrayList<HashMap<String, Float>> histograms) {
+    private void extractVocabulary(ArrayList<DocSamplePackage> samples) {
         // Determine the vocabulary through all documents
         HashMap<String, Float> allWords = new HashMap<>();
-        for (HashMap<String, Float> docHistogram : histograms) {
+        for (DocSamplePackage sample : samples) {
+            HashMap<String, Float> docHistogram = sample.getHistogram();
             for (String word : docHistogram.keySet()) {
                 Float oldCount = allWords.get(word);
                 if (oldCount != null) {
