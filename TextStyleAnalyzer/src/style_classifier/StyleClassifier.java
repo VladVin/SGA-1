@@ -1,6 +1,7 @@
 package style_classifier;
 
 import weka.classifiers.Classifier;
+import weka.classifiers.functions.LinearRegression;
 import weka.classifiers.trees.RandomForest;
 import weka.core.*;
 
@@ -15,6 +16,7 @@ public class StyleClassifier {
     private BagOfWords bagOfWords;
     private Classifier model;
     private ArrayList<Attribute> feature;
+    private Instances trainingDataSet;
 
     public StyleClassifier() {
         this.bagOfWords = new BagOfWords();
@@ -29,6 +31,15 @@ public class StyleClassifier {
         model.buildClassifier(instances);
     }
 
+    public double[] predict(
+            HashMap<String, Float> docHistogram) throws Exception {
+        ArrayList<Float> docDescriptor =
+                bagOfWords.calcDocDescriptor(docHistogram);
+        Instance predictInstance = convertInstance(docDescriptor);
+
+        return model.distributionForInstance(predictInstance);
+    }
+
     private void generateFeature(int numberOfWords) {
         feature = new ArrayList<>(numberOfWords + 1);
         for (int i = 0; i < numberOfWords; i++) {
@@ -36,11 +47,7 @@ public class StyleClassifier {
             feature.add(attribute);
         }
 
-        ArrayList<String> fvClassValues = new ArrayList<>(2);
-        fvClassValues.add("positive");
-        fvClassValues.add("negative");
-        Attribute classAttribute = new Attribute("class", fvClassValues);
-
+        Attribute classAttribute = new Attribute("class");
         feature.add(classAttribute);
     }
 
@@ -54,25 +61,42 @@ public class StyleClassifier {
             throw new Exception("Bad document descriptors of packages");
         }
         int countOfWordAttributes = docDescriptors.get(0).size();
+        int samplesCount = docDescriptors.size();
 
         generateFeature(countOfWordAttributes);
 
-        Instances instances = new Instances("train", feature, countOfWordAttributes + 1);
-        instances.setClassIndex(countOfWordAttributes);
+        trainingDataSet = new Instances("train", feature, samplesCount);
+        trainingDataSet.setClassIndex(feature.size() - 1);
 
         for (int i = 0; i < docDescriptors.size(); i++) {
             ArrayList<Float> docDescriptor = docDescriptors.get(i);
             DocSamplePackage docPackage = docPackages.get(i);
-            Instance instance = new DenseInstance(countOfWordAttributes + 1);
-            instance.setDataset(instances);
+            Instance instance = new DenseInstance(feature.size());
+            instance.setDataset(trainingDataSet);
             for (int j = 0; j < docDescriptor.size(); j++) {
                 instance.setValue(j, docDescriptor.get(j));
             }
-            instance.setValue(countOfWordAttributes,
-                    docPackage.getLabel() == DocSamplePackage.Label.POSITIVE ? "positive" : "negative");
-            instances.add(instance);
+
+            instance.setClassValue(
+                    docPackage.getLabel() == DocSamplePackage.Label.POSITIVE ? 1.0f : 0.0f);
+            trainingDataSet.add(instance);
         }
 
-        return instances;
+        return trainingDataSet;
+    }
+
+    private Instance convertInstance(ArrayList<Float> docDescriptor) throws Exception {
+        if (trainingDataSet == null) {
+            throw new Exception("There is no training data set yet");
+        }
+
+        Instance instance = new DenseInstance(docDescriptor.size());
+        instance.setDataset(trainingDataSet);
+
+        for (int i = 0; i < docDescriptor.size(); i++) {
+            instance.setValue(i, docDescriptor.get(i));
+        }
+
+        return instance;
     }
 }
