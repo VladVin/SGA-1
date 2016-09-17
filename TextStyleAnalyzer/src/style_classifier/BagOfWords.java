@@ -1,5 +1,6 @@
 package style_classifier;
 
+import java.io.*;
 import java.util.*;
 
 /**
@@ -9,6 +10,7 @@ public class BagOfWords {
 
     private static final int MAX_VOCABULARY_SIZE = 5000;
     private static final TfWeight TF_WEIGHT = TfWeight.RAW_FREQUENCY;
+    private static final String VOCABULARY_PATH = "vocabulary.txt";
 
     private enum TfWeight {
         BINARY_FREQUENCY, RAW_FREQUENCY, LOG_NORMALIZATION }
@@ -16,7 +18,7 @@ public class BagOfWords {
     private ArrayList<String> vocabulary;
 
     public ArrayList<ArrayList<Float>> parseTrainHistograms(
-            ArrayList<DocSamplePackage> trainSamples) {
+            ArrayList<DocSamplePackage> trainSamples) throws Exception {
         if (trainSamples == null || trainSamples.size() == 0) {
             return null;
         }
@@ -32,11 +34,9 @@ public class BagOfWords {
 
         return docDescriptors;
     }
-
-    public ArrayList<Float> calcDocDescriptor(HashMap<String, Float> histogram) {
-        if (vocabulary == null) {
-            return null;
-        }
+    public ArrayList<Float> calcDocDescriptor(
+            HashMap<String, Float> histogram) throws Exception {
+        vocabulary = loadVocabulary();
 
         float countOfTerms = 0.0f;
         for (float count : histogram.values()) {
@@ -57,30 +57,33 @@ public class BagOfWords {
         return docTf;
     }
 
-    private void extractVocabulary(ArrayList<DocSamplePackage> samples) {
+    private void extractVocabulary(
+            ArrayList<DocSamplePackage> samples) throws Exception {
         // Determine the vocabulary through all documents
         HashMap<String, Float> allWords = new HashMap<>();
         for (DocSamplePackage sample : samples) {
             HashMap<String, Float> docHistogram = sample.getHistogram();
             for (String word : docHistogram.keySet()) {
                 Float oldCount = allWords.get(word);
+                Float curCount = docHistogram.get(word);
                 if (oldCount != null) {
-                    allWords.replace(word, oldCount + docHistogram.get(word));
+                    allWords.replace(word, oldCount + curCount);
                 } else {
-                    allWords.put(word, 0.0f);
+                    allWords.put(word, curCount);
                 }
             }
         }
 
         // Extract vocabulary of most frequent words
-        HashMap<String, Float> sortedVoc = sortHashMapByValues(allWords);
-        Object[] sortedVocArr = sortedVoc.keySet().toArray();
+        ArrayList<Map.Entry<String, Float>> sortedVoc = getEntriesBySortingMapByValues(allWords);
         vocabulary = new ArrayList<>();
-        int desiredVocSize = sortedVocArr.length >= MAX_VOCABULARY_SIZE ?
-                MAX_VOCABULARY_SIZE : sortedVocArr.length;
+        int desiredVocSize = sortedVoc.size() >= MAX_VOCABULARY_SIZE ?
+                MAX_VOCABULARY_SIZE : sortedVoc.size();
         for (int i = desiredVocSize - 1; i >= 0; i--) {
-            vocabulary.add((String)sortedVocArr[i]);
+            vocabulary.add(sortedVoc.get(i).getKey());
         }
+
+        saveVocabulary(vocabulary);
     }
 
     private String mergeDocDescriptors(ArrayList<String> docDescriptors) {
@@ -112,32 +115,59 @@ public class BagOfWords {
         }
     }
 
-    private HashMap<String, Float> sortHashMapByValues(
+    private ArrayList<Map.Entry<String, Float>> getEntriesBySortingMapByValues(
             HashMap<String, Float> passedMap) {
-        List<String> mapKeys = new ArrayList<>(passedMap.keySet());
-        List<Float> mapValues = new ArrayList<>(passedMap.values());
-        Collections.sort(mapValues);
-        Collections.sort(mapKeys);
 
-        HashMap<String, Float> sortedMap = new HashMap<>();
+        ArrayList<Map.Entry<String, Float>> entryList =
+                new ArrayList<>(passedMap.entrySet());
 
-        Iterator<Float> valueIt = mapValues.iterator();
-        while (valueIt.hasNext()) {
-            Float val = valueIt.next();
-            Iterator<String> keyIt = mapKeys.iterator();
-
-            while (keyIt.hasNext()) {
-                String key = keyIt.next();
-                Float comp1 = passedMap.get(key);
-                Float comp2 = val;
-
-                if (comp1.equals(comp2)) {
-                    keyIt.remove();
-                    sortedMap.put(key, val);
-                    break;
-                }
+        entryList.sort(new Comparator<Map.Entry<String, Float>>() {
+            @Override
+            public int compare(Map.Entry<String, Float> o1, Map.Entry<String, Float> o2) {
+                return o1.getValue().compareTo(o2.getValue());
             }
+        });
+
+        return entryList;
+    }
+
+    private void saveVocabulary(ArrayList<String> vocabulary) throws Exception {
+        if (vocabulary == null) {
+            return;
         }
-        return sortedMap;
+
+        try {
+            FileWriter fileWriter = new FileWriter(VOCABULARY_PATH);
+            BufferedWriter bw = new BufferedWriter(fileWriter);
+
+            for (String vocRecord : vocabulary) {
+                bw.write(vocRecord);
+                bw.newLine();
+            }
+
+            bw.close();
+        } catch (IOException e) {
+            throw new Exception("Cannot save vocabulary");
+        }
+    }
+
+    private ArrayList<String> loadVocabulary() throws Exception {
+        try {
+            ArrayList<String> vocabulary = new ArrayList<>();
+
+            FileReader fileReader = new FileReader(VOCABULARY_PATH);
+            BufferedReader br = new BufferedReader(fileReader);
+
+            String line;
+            while ((line = br.readLine()) != null) {
+                vocabulary.add(line);
+            }
+
+            br.close();
+
+            return vocabulary;
+        } catch (FileNotFoundException e) {
+            throw new Exception("Cannot load vocabulary");
+        }
     }
 }
