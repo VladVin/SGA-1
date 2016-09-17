@@ -6,12 +6,12 @@ import java.util.ArrayList;
  * Created by VladVin on 16.09.2016.
  */
 public class CommandLineParser {
-    public enum LaunchType { TRAIN, TEST }
+    public enum LaunchType { TRAIN, TEST, NONE }
 
     private enum TrainArgType { POS_DIRS, NEG_DIRS, NONE }
     private enum PredictArgType { DOCS, NONE }
 
-    private LaunchType launchType;
+    private LaunchType launchType = LaunchType.NONE;
 
     private ArrayList<String> posDirs;
     private ArrayList<String> negDirs;
@@ -23,7 +23,7 @@ public class CommandLineParser {
             return;
         }
 
-        switch (args[1]) {
+        switch (args[0]) {
             case "train":
                 parseTrainArgs(args);
                 launchType = LaunchType.TRAIN;
