@@ -36,7 +36,8 @@ public class DocumentsReader {
 
     public static ArrayList<File> getAllFilesInFolder(
             File folder, ArrayList<File> curFilesSet) {
-        if (!folder.isDirectory()) {
+        if (folder.isFile()) {
+            curFilesSet.add(folder);
             return curFilesSet;
         }
 
