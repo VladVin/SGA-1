@@ -7,10 +7,10 @@ import java.util.regex.Pattern;
 
 public class Tokenizer {
 
-    final static int WORD_SIZE = 3;
-    final static int LEFT_GAP = 3;
-    final static int RIGHT_GAP = 3;
-    final static int NUMBER_OF_WORDS = 10000;
+    private final static int WORD_SIZE = 3;
+    private final static int LEFT_GAP = 3;
+    private final static int RIGHT_GAP = 3;
+    private final static int NUMBER_OF_WORDS = 10000;
 
     public static HashMap<String, Float> tokenize (String doc){
 
@@ -38,11 +38,11 @@ public class Tokenizer {
                 }
 
                 if (!keys.isEmpty()) {
-                    portion = 1 / (float) keys.size();
+                    portion = 1.0f / keys.size();
 
                     while (keys.size() > 0) {
 
-                        key = findSubstring(currentWord, keys.get(0));
+                        key = findSubstring(keys.get(0), currentWord);
                         value = hm.get(keys.get(0)) + portion;
                         if (hm.containsKey(key) && (!key.equals(keys.get(0)))) {
                             value += hm.get(key);
@@ -54,7 +54,7 @@ public class Tokenizer {
                         keys.remove(0);
                     }
                 } else {
-                    hm.put(currentWord, (float) 1);
+                    hm.put(currentWord, 1.0f);
                 }
 
             }
@@ -62,10 +62,11 @@ public class Tokenizer {
                 currentWord = m.group(0);
                 if (hm.containsKey(currentWord)){
                     hm.put(currentWord, hm.get(currentWord)+1);
-                } else hm.put(currentWord, (float)1);
+                } else hm.put(currentWord, 1.0f);
             }
-        }
         wordCounter++;
+        }
+
         return hm;
 
     }
