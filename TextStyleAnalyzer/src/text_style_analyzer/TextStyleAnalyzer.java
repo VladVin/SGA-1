@@ -21,9 +21,11 @@ public class TextStyleAnalyzer {
 
         switch (clp.getLaunchType()) {
             case TRAIN:
+                System.out.println("Training...");
                 train(clp.getPosDirs(), clp.getNegDirs());
                 break;
             case TEST:
+                System.out.println("Testing...");
                 test(clp.getPredictDocs());
                 break;
             case NONE:
