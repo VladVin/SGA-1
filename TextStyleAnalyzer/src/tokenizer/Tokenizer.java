@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-//tokenize
 public class Tokenizer {
 
     final static int WORD_SIZE = 3;
@@ -29,36 +28,44 @@ public class Tokenizer {
         String key;
 
         while (m.find() && (wordCounter < NUMBER_OF_WORDS)) {
-            currentWord = m.group(0);
-            for (HashMap.Entry<String, Float> entry :hm.entrySet()) {
-                key = findSubstring(entry.getKey(), currentWord);
-                if (key != null) {
-                    keys.add(entry.getKey());
-                }
-            }
-
-            if (!keys.isEmpty()) {
-                portion = 1 / (float)keys.size();
-
-                while (keys.size() > 0) {
-
-                    key = findSubstring(currentWord, keys.get(0));
-                    value = hm.get(keys.get(0)) + portion;
-                    if (hm.containsKey(key) && (!key.equals(keys.get(0)))) {
-                        value += hm.get(key);
+            if (!(LEFT_GAP == 0 && RIGHT_GAP == 0)) {
+                currentWord = m.group(0);
+                for (HashMap.Entry<String, Float> entry : hm.entrySet()) {
+                    key = findSubstring(entry.getKey(), currentWord);
+                    if (key != null) {
+                        keys.add(entry.getKey());
                     }
-                    if (!key.equals(keys.get(0))){
-                        hm.remove(keys.get(0));
-                    }
-                    hm.put(key, value);
-                    keys.remove(0);
                 }
-            } else {
-                hm.put(currentWord, (float)1);
+
+                if (!keys.isEmpty()) {
+                    portion = 1 / (float) keys.size();
+
+                    while (keys.size() > 0) {
+
+                        key = findSubstring(currentWord, keys.get(0));
+                        value = hm.get(keys.get(0)) + portion;
+                        if (hm.containsKey(key) && (!key.equals(keys.get(0)))) {
+                            value += hm.get(key);
+                        }
+                        if (!key.equals(keys.get(0))) {
+                            hm.remove(keys.get(0));
+                        }
+                        hm.put(key, value);
+                        keys.remove(0);
+                    }
+                } else {
+                    hm.put(currentWord, (float) 1);
+                }
+
             }
-            wordCounter++;
+            else {
+                currentWord = m.group(0);
+                if (hm.containsKey(currentWord)){
+                    hm.put(currentWord, hm.get(currentWord)+1);
+                } else hm.put(currentWord, (float)1);
+            }
         }
-
+        wordCounter++;
         return hm;
 
     }
