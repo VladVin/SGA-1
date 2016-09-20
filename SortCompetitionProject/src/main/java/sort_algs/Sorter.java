@@ -31,10 +31,10 @@ public class Sorter {
         SortingAlgorithm sortAlg = null;
         switch (order) {
             case ASCENDING:
-                sortAlg = SortAlgFabric.createAlgorithm(SortAlgFabric.SortAlgType.TIM_SORT);
+                sortAlg = SortAlgFabric.createAlgorithm(SortAlgFabric.SortAlgType.ASC_SORT);
                 break;
             case DESCENDING:
-                // TODO: Use radix sort algorithm
+                sortAlg = SortAlgFabric.createAlgorithm(SortAlgFabric.SortAlgType.DESC_SORT);
                 break;
             case RANDOM:
                 // TODO: Use radix sort algorithm
