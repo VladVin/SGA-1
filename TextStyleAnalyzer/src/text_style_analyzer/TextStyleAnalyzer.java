@@ -99,7 +99,7 @@ public class TextStyleAnalyzer {
                         "Book " + String.valueOf(i + 1) + ". " +
                                 (result[0] >= 0.5f ?
                                 ("The author IS THE SAME. Confidence: " + result[0]) :
-                                "The author IS'NOT THE SAME. Confidence: " + (1.0f - result[0])));
+                                "The author IS'NOT THE SAME. Confidence: " + result[0]));
             }
         } catch (Exception e) {
             e.printStackTrace();
