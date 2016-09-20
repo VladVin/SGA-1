@@ -37,7 +37,7 @@ public class Sorter {
                 sortAlg = SortAlgFabric.createAlgorithm(SortAlgFabric.SortAlgType.DESC_SORT);
                 break;
             case RANDOM:
-                // TODO: Use radix sort algorithm
+                sortAlg = SortAlgFabric.createAlgorithm(SortAlgFabric.SortAlgType.HEAP_SORT);
                 break;
             default:
                 return null;
